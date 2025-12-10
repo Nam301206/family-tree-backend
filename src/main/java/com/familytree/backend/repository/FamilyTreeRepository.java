@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface FamilyTreeRepository extends JpaRepository<FamilyTree, Long> {
     // có thể đinh nghĩa thêm hàm  tìm kiếm tùy chỉnh ở đây nếu cần
     // list<FamilyTree> findByNameContaining(String namePart);
+    
 }
