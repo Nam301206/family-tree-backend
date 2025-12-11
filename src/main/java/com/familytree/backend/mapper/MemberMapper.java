@@ -41,4 +41,19 @@ public class MemberMapper {
                 .build();
     }
     
+
+    // hàm giúp cập nhập dữ liệu từ request từ ENtity đã có
+    public void updateFromRequest(Member member, MemberRequest request) {
+        member.setFullName(request.getFullName());
+        member.setGender(request.getGender());
+        member.setDob(request.getDob());
+        member.setDod(request.getDod());
+        member.setBio(request.getBio());
+        member.setAvatarUrl(request.getAvatarUrl());
+        member.setPosX(request.getPosX());
+        member.setPosY(request.getPosY());
+
+        // Note: familyTree không được cập nhật ở đây
+        // vì chuyển cây gia phả là logic phức tạp hơn, cần xử lý riêng
+    }
 }

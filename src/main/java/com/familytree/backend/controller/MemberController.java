@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 //import java.lang.reflect.Member;
+//import java.lang.reflect.Member;
 import java.util.List;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,7 +26,7 @@ public class MemberController {
     // method: POST
     // url: http://localhost:8080/api/members
 
-    @PostMapping("path")
+    @PostMapping()
     public ResponseEntity<MemberResponse> createMember(@RequestBody MemberRequest request) {
         MemberResponse newMember = memberService.createMember(request);
         return ResponseEntity.ok(newMember);
@@ -37,5 +38,23 @@ public class MemberController {
     @GetMapping("/tree/{treeId}")
     public ResponseEntity<List<MemberResponse>> getMembersByTreeId(@PathVariable Long treeId) {
         return ResponseEntity.ok(memberService.getMembersByTreeId(treeId));
-    }   
+    }
+
+    // 3. API cập nhập thông tin thành viên
+    // method: PUT
+    // url: http://localhost:8080/api/members/{id}
+    @PutMapping("/{id}")
+    public ResponseEntity<MemberResponse> updateMember(@PathVariable Long id, @RequestBody MemberRequest request){
+        return ResponseEntity.ok(memberService.updateMember(id, request));
+    }
+
+    // 4. API xoá thành viên (nếu cần)
+    // method: DELETE
+    // url: http://localhost:8080/api/members/{id}
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteMember(@PathVariable Long id){
+        memberService.deleteMember(id);
+        return ResponseEntity.ok("Xoá thành viên thành công");
+    }
+
 }

@@ -49,4 +49,33 @@ public class MemberServiceImpl { // Nếu có Interface thì implements MemberSe
                 .map(memberMapper::toResponse)
                 .collect(Collectors.toList());
     }
+
+    // 1 tính năng update (sửa) 
+    @Transactional
+    public MemberResponse updateMember (Long memberId, MemberRequest request){
+        //b1: xem thành viên có tồn tại không
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new RuntimeException("không tìm thấy thành viên với id: " + memberId));
+
+        // b2: cập nhập thông tin mới vào member cũ
+        memberMapper.updateFromRequest(member, request);
+
+        //b3: lưu xuống database (hàm save của JPA tự hiểu là update nếu id đã tồn tại)
+        Member updateMember = memberRepository.save(member);
+
+        // b4: trả về response
+        return memberMapper.toResponse(updateMember);
+    }
+
+    // 2 tính năng delete (xóa) thành viên
+    @Transactional
+    public void deleteMember(Long memberId){
+        // B1: kiểm tra thành viên có tồn tại không
+        if(!memberRepository.existsById(memberId)){
+            throw new RuntimeException("Không tìm thấy thành viên với Id" + memberId);
+        }
+
+        // b2: xóa thành viên
+        memberRepository.deleteById(memberId);
+    }
 }
