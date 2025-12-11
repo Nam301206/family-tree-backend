@@ -1,8 +1,10 @@
 package com.familytree.backend.service;
 
+import com.familytree.backend.dto.request.MemberRequest;
+import com.familytree.backend.dto.response.MemberResponse;
 import com.familytree.backend.dto.request.FamilyTreeRequest;
 import com.familytree.backend.dto.response.FamilyTreeResponse;
-import com.familytree.backend.entity.FamilyTree;
+//import com.familytree.backend.entity.FamilyTree;
 import java.util.List;
 
 public interface FamilyTreeService {
@@ -11,5 +13,8 @@ public interface FamilyTreeService {
 
     // định nghĩa hàm lấy danh sách cây
     List<FamilyTreeResponse> getAllTrees();
+
+    MemberResponse addMember(Long treeId, MemberRequest request);
+    List<MemberResponse> getMembersByTreeId(Long treeId);
 
 }

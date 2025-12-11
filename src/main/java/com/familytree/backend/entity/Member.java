@@ -33,7 +33,7 @@ public class Member {
 
     @Column(columnDefinition = "TEXT")
     private String bio; // biography = tiểu sử
-    private String photoUrl; // URL ảnh đại diện
+    private String avatarUrl; // URL ảnh đại diện
 
     // Tọa độ hiển thị trên giao diện cây
     private Integer posX;

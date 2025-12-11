@@ -1,8 +1,10 @@
 package com.familytree.backend.controller;
 
+import com.familytree.backend.dto.request.MemberRequest;
+import com.familytree.backend.dto.response.MemberResponse;
 import com.familytree.backend.dto.request.FamilyTreeRequest;
 import com.familytree.backend.dto.response.FamilyTreeResponse;
-import com.familytree.backend.entity.FamilyTree;
+//import com.familytree.backend.entity.FamilyTree;
 import com.familytree.backend.service.FamilyTreeService; // Import Interface, ko import Impl
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,5 +28,15 @@ public class FamilyTreeController {
     @GetMapping
     public ResponseEntity<List<FamilyTreeResponse>> getAllTrees() {
         return ResponseEntity.ok(treeService.getAllTrees());
+    }
+
+    @PostMapping("/{treeId}/members")
+    public ResponseEntity<MemberResponse> addMember(@PathVariable Long treeId, @RequestBody MemberRequest request) {
+        return ResponseEntity.ok(treeService.addMember(treeId, request));
+    }
+
+    @GetMapping("/{treeId}/members")
+    public ResponseEntity<List<MemberResponse>> getMembersByTreeId(@PathVariable Long treeId) {
+        return ResponseEntity.ok(treeService.getMembersByTreeId(treeId));
     }
 }
