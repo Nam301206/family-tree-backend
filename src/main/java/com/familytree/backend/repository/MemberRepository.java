@@ -9,4 +9,10 @@ import java.util.List;
 public interface MemberRepository extends JpaRepository<Member, Long> {
     // Tìm tất cả thành viên theo ID cây gia đình
     List<Member> findByFamilyTreeId(Long familyTreeId);
+
+    // tìm danh sách con theo id của cha
+    List<Member> findByFatherId(Long fatherId);
+
+    // tìm danh sách con theo id của mẹ
+    List<Member> findByMotherId(Long motherId);
 }

@@ -22,27 +22,31 @@ public class MemberServiceImpl { // Nếu có Interface thì implements MemberSe
     private final FamilyTreeRepository familyTreeRepository; // Cần cái này để check cây tồn tại
     private final MemberMapper memberMapper;
 
+    // Tạo thành viên mới
     @Transactional
     public MemberResponse createMember(MemberRequest request) {
-        // 1. Tìm cây gia phả theo ID gửi lên
-        // (Giả sử request có field treeId)
+        // B1: tìm cây gia phả
         FamilyTree tree = familyTreeRepository.findById(request.getTreeId())
-                .orElseThrow(() -> new RuntimeException("Family Tree not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy cây gia đình với id: " + request.getTreeId()));
 
-        // 2. Map từ Request sang Entity
+        // B2: Map từ Request sang Entity
         Member member = memberMapper.toEntity(request);
-        
-        // 3. Gán cây gia phả vào member
         member.setFamilyTree(tree);
 
-        // 4. Lưu vào DB
-        Member savedMember = memberRepository.save(member);
+        // B3: lưu lần 1: để sinh ra id trước (quan trọng cho quan hệ 2 chiều)
+        Member saveMember = memberRepository.save(member);
 
-        // 5. Trả về Response
-        return memberMapper.toResponse(savedMember);
+        // B4: cập nhập quan hệ (lúc này đã có id để gán quan hệ 2 chiều)
+        updateRelationships(saveMember, request);
+
+        // B5: lưu lần 2: để lần : để cập nhập các mối quan hệ vừa lưu vào DB
+        saveMember = memberRepository.save(saveMember);
+
+        // B6: trả về response
+        return memberMapper.toResponse(saveMember);
     }
     
-    // Hàm lấy danh sách thành viên theo Tree ID
+    // Đọc danh sách thành viên theo treeId
     public List<MemberResponse> getMembersByTreeId(Long treeId) {
         List<Member> members = memberRepository.findByFamilyTreeId(treeId);
         return members.stream()
@@ -50,7 +54,7 @@ public class MemberServiceImpl { // Nếu có Interface thì implements MemberSe
                 .collect(Collectors.toList());
     }
 
-    // 1 tính năng update (sửa) 
+    // Thêm thành viên: cập nhập thông tin thành viên
     @Transactional
     public MemberResponse updateMember (Long memberId, MemberRequest request){
         //b1: xem thành viên có tồn tại không
@@ -60,22 +64,97 @@ public class MemberServiceImpl { // Nếu có Interface thì implements MemberSe
         // b2: cập nhập thông tin mới vào member cũ
         memberMapper.updateFromRequest(member, request);
 
-        //b3: lưu xuống database (hàm save của JPA tự hiểu là update nếu id đã tồn tại)
+        // b3: cập nhập mối quan hệ cha/mẹ/ vợ/chồng nếu có
+        updateRelationships(member, request);
+
+        // b4: lưu xuống database (hàm save của JPA tự hiểu là update nếu id đã tồn tại)
         Member updateMember = memberRepository.save(member);
 
-        // b4: trả về response
+        // b5: trả về response
         return memberMapper.toResponse(updateMember);
     }
 
-    // 2 tính năng delete (xóa) thành viên
+    // Xóa thành viên 
     @Transactional
     public void deleteMember(Long memberId){
-        // B1: kiểm tra thành viên có tồn tại không
-        if(!memberRepository.existsById(memberId)){
-            throw new RuntimeException("Không tìm thấy thành viên với Id" + memberId);
+        Member member = memberRepository.findById(memberId)
+        .orElseThrow(() -> new RuntimeException("không tìm thấy thành viên với ID: " + memberId));
+
+        // gỡ quan hệ cha/mẹ/ vợ/chồng của các thành viên khác với thành viên này
+        List<Member> childrenAsFather = memberRepository.findByFatherId(memberId);
+        for(Member child : childrenAsFather){
+            child.setFather(null); // gỡ quan hệ cha
+            memberRepository.save(child);
         }
 
-        // b2: xóa thành viên
-        memberRepository.deleteById(memberId);
+        // tương tự với mẹ
+        List<Member> childrenAsMother = memberRepository.findByMotherId(memberId);
+        for(Member child : childrenAsMother){
+            child.setMother(null); // gỡ quan hệ mẹ
+            memberRepository.save(child);
+        }
+
+        // Gỡ quan hệ vợ / chồng (người ở lại độc thân)
+        if(member.getSpouse() != null){
+            Member spouse = member.getSpouse();
+            spouse.setSpouse(null); // gỡ người này ra khỏi quan hệ vợ/ chồng
+            memberRepository.save(spouse);
+        }
+
+        // sau khi dọn dẹp sạch sẽ xoá thành viên
+        memberRepository.delete(member);
+    }
+
+    // hàm phụ trợ : xử lý gán quan hệ cha/mẹ/ vợ/ chồng
+    private void updateRelationships(Member member, MemberRequest request){
+        // xử lý cha
+        if(request.getFatherId() != null){
+            Member father = memberRepository.findById(request.getFatherId())
+                    .orElse(null); // nếu không tìm thấy thì thôi
+            member.setFather(father);
+        } else{
+            member.setFather(null); // nếu Request gửi null thì xóa cha
+    }
+
+        // xử lý mẹ
+        if(request.getMotherId() != null){
+            Member mother = memberRepository.findById(request.getMotherId())
+                    .orElse(null);
+            member.setMother(mother);
+        } else{
+            member.setMother(null);
+        }
+
+        // xử lý vợ/ chồng (LoGIC 2 chiều)
+        if(request.getSpouseId() != null){
+            // Trường Hợp : gán vợ/ chồng mới
+            Member newSpouse = memberRepository.findById(request.getMotherId()).orElse(null);
+            
+            if(newSpouse != null){
+                // nếu 1 người đã có vợ/ chồng cũ (không phải là mình), cần gỡ ra trước(tránh đa thê, đa phu)
+                if(newSpouse.getSpouse() != null && !newSpouse.getSpouse().getId().equals(member.getId())){
+                    Member exOfNewSpouse = newSpouse.getSpouse();
+                    exOfNewSpouse.setSpouse(null);
+                    memberRepository.save(exOfNewSpouse);
+                }
+
+                // Thiết lập quan hệ 2 chiều
+                member.setSpouse(newSpouse); // mình trỏ tới họ
+                newSpouse.setSpouse(member); // họ trỏ về mình
+                memberRepository.save(newSpouse); // lưu người kia
+            }
+        } else {
+            // Trường hợp xóa quan hệ vợ/ chồng
+            if(member.getSpouse() != null){
+                Member oldSpouse = member.getSpouse();
+                oldSpouse.setSpouse(null); // gỡ mình ra khỏi người cũ
+                memberRepository.save(oldSpouse); // lưu lại người cư
+            }
+            member.setSpouse(null); // gỡ ngưỡi cũ ra khỏi mình
+        }
     }
 }
+
+
+
+    

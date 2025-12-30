@@ -38,6 +38,10 @@ public class MemberMapper {
                 .avatarUrl(member.getAvatarUrl())
                 .posX(member.getPosX())
                 .posY(member.getPosY())
+                // kiểm tra null để tránh lỗi (không có bố thì trả về null)
+                .fatherId(member.getFather() != null ? member.getFather().getId() : null)
+                .motherId(member.getMother() != null ? member.getMother().getId() : null)
+                .spouseId(member.getSpouse() != null ? member.getSpouse().getId() : null)
                 .build();
     }
     

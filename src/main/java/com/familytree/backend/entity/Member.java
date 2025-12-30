@@ -38,4 +38,19 @@ public class Member {
     // Tọa độ hiển thị trên giao diện cây
     private Integer posX;
     private Integer posY;
+
+    // liên kết với cha
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "father_id")
+    private Member father;
+
+    // liên kết với mẹ
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mother_id")
+    private Member mother;
+
+    // liên kết với vợ/chồng
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "spouse_id")
+    private Member spouse;
 }

@@ -21,4 +21,8 @@ public class MemberResponse {
     private String avatarUrl;
     private Integer posX;
     private Integer posY;
+    private Long fatherId; // id của cha (nếu có)
+    private Long motherId; // id của mẹ (nếu có)
+    private Long spouseId; // id của vợ/chồng (nếu có)
+    
 }
