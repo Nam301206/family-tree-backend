@@ -2,6 +2,8 @@ package com.familytree.backend.controller;
 
 import com.familytree.backend.dto.request.MemberRequest;
 import com.familytree.backend.dto.response.MemberResponse;
+import com.familytree.backend.dto.response.MemberTreeNode;
+
 import lombok.RequiredArgsConstructor;
 import com.familytree.backend.service.impl.MemberServiceImpl;
 import org.springframework.http.ResponseEntity;
@@ -10,8 +12,6 @@ import org.springframework.web.bind.annotation.*;
 //import java.lang.reflect.Member;
 //import java.lang.reflect.Member;
 import java.util.List;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 
 @RestController
@@ -38,6 +38,20 @@ public class MemberController {
     @GetMapping("/tree/{treeId}")
     public ResponseEntity<List<MemberResponse>> getMembersByTreeId(@PathVariable Long treeId) {
         return ResponseEntity.ok(memberService.getMembersByTreeId(treeId));
+    }
+
+    // 2.1 // API Lấy cây gia phả dạng Nested JSON
+    // GET: http://localhost:8080/api/v1/members/tree-nested/{treeId}
+    @GetMapping("/tree-nested/{treeId}")
+    public ResponseEntity<List<MemberTreeNode>> getTreeNested(@PathVariable Long treeId) {
+        return ResponseEntity.ok(memberService.getFamilyTreeRecursive(treeId));
+    }
+
+    // 2.2 // API Lấy chi tiết 1 thành viên (Để xem profile khi click vào node)
+    // GET: http://localhost:8080/api/v1/members/{id}
+    @GetMapping("/{id}")
+    public ResponseEntity<MemberResponse> getMemberById(@PathVariable Long id) {
+        return ResponseEntity.ok(memberService.getMemberById(id));
     }
 
     // 3. API cập nhập thông tin thành viên
